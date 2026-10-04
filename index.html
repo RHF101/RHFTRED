@@ -148,7 +148,7 @@ function run(){stopAll();var er=function(e){G.fatal=1;lock('Ditolak server: '+e.
 G.un=[R.ref('live').on('value',onLive,null,er),R.ref('users/'+G.uid).on('value',onAcc,null,er)];subC()}
 function start(){if(R)return;R=RHF.init(U,K);R.auth.onChange(function(u){if(u){G.uid=u.uid;$('who').textContent=u.email;show('login',0);show('app',1);run()}else{stopAll();G.uid=null;show('app',0);show('login',1)}})}
 function boot(){show('lk',0);if(!U||!K){show('setup',1);return}show('setup',0);
-if(location.protocol=='https:'&&U.indexOf('http:')==0){lock('Panel harus HTTPS (pakai tunnel), browser memblokir HTTP.',1);return}
+if(location.protocol=='https:'&&/^http:\/\/(?!127\.0\.0\.1|localhost)/.test(U)){lock('Panel harus HTTPS (pakai tunnel), browser memblokir HTTP.',1);return}
 var s=document.createElement('script');s.src=U+'/sdk.js';s.onload=start;s.onerror=function(){lock('Server mati atau URL salah. Mencoba lagi...',1);setTimeout(boot,4000)};document.head.appendChild(s)}
 setInterval(function(){if(!G.uid||G.fatal)return;if(Date.now()-G.seen>7000)lock('Server / feeder mati. Menunggu nyambung lagi...',1);else show('lk',0)},1000);
 window.addEventListener('resize',draw);mk();boot();
