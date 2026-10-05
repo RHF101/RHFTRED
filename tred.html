@@ -1,0 +1,117 @@
+<!doctype html><html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>RHF TRED</title>
+<style>
+:root{--bg:#05060a;--card:#0a0f18;--line:#1a2638;--ink:#d6e4f5;--mut:#7385a0;--cy:#00e5ff;--pu:#a855f7;--up:#22d3a0;--dn:#ff4d6d}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 ui-monospace,Menlo,Consolas,"Courier New",monospace;
+background-image:linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);background-size:32px 32px}
+.w{max-width:1000px;margin:0 auto;padding:12px}
+h1{margin:0;font-size:1.3rem;letter-spacing:.2em;color:var(--cy);text-shadow:0 0 14px rgba(0,229,255,.45)}
+h3{margin:0 0 8px;font-size:.72rem;letter-spacing:.14em;color:var(--pu)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px;margin-bottom:10px}
+.mut{color:var(--mut);font-size:.8rem}.up{color:var(--up)}.dn{color:var(--dn)}
+input{width:100%;font:inherit;background:#05080e;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px;margin:0 0 8px}
+input:focus,button:focus-visible{outline:2px solid var(--pu);outline-offset:1px}
+button{font:inherit;border:1px solid var(--cy);color:var(--cy);background:transparent;border-radius:6px;padding:7px 12px;cursor:pointer}
+button:hover{background:rgba(0,229,255,.1)}button.pri{background:var(--cy);color:#00161a;font-weight:700}
+button.b{border-color:var(--up);color:var(--up)}button.b:hover{background:rgba(34,211,160,.12)}
+button.s{border-color:var(--dn);color:var(--dn)}button.s:hover{background:rgba(255,77,109,.12)}
+button.sm{padding:3px 8px;font-size:.78rem}button:disabled{opacity:.4;cursor:not-allowed}
+.r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.r>*{flex:1}.r>button{flex:0 0 auto}
+.grid{display:grid;gap:10px}@media(min-width:800px){.grid{grid-template-columns:1.2fr 1fr}}
+.bal{display:flex;gap:18px;flex-wrap:wrap}.bal b{display:block;font-size:1.25rem;color:var(--cy)}
+.row{display:flex;justify-content:space-between;gap:8px;padding:6px 4px;border-bottom:1px solid var(--line);cursor:pointer}
+.row.on{background:rgba(168,85,247,.12)}.row.u b{animation:fu .7s}.row.d b{animation:fd .7s}
+@keyframes fu{from{color:var(--up);text-shadow:0 0 8px var(--up)}}@keyframes fd{from{color:var(--dn);text-shadow:0 0 8px var(--dn)}}
+canvas{width:100%;height:170px;display:block}
+table{width:100%;border-collapse:collapse;font-size:.8rem}td,th{padding:4px 3px;text-align:right;border-bottom:1px solid var(--line)}th{color:var(--mut);font-weight:400}td:first-child,th:first-child{text-align:left}
+#st{font-size:.82rem;margin-top:4px}#toast{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--card);border:1px solid var(--cy);padding:9px 14px;border-radius:8px;max-width:92%;z-index:9}
+#toast.e{border-color:var(--dn);color:var(--dn)}details{margin-top:8px}summary{cursor:pointer;color:var(--mut)}pre{white-space:pre-wrap;word-break:break-all;font-size:.74rem;background:#05080e;padding:8px;border-radius:6px;border:1px solid var(--line)}
+</style></head><body><div class="w">
+<div class="top"><h1>RHF TRED</h1><div class="r" style="flex:0"><span class="mut" id="who"></span><button class="sm" id="out" hidden>Keluar</button></div></div>
+
+<div class="card"><h3>SAMBUNGAN SERVER</h3>
+<input id="url" placeholder="URL server, mis. http://192.168.1.5:8080 atau http://192.168.1.5:8081/s/ID" autocapitalize="off" spellcheck="false">
+<input id="key" placeholder="PUBLIC KEY (pk_...), kosongkan kalau lewat proxy" autocapitalize="off" spellcheck="false">
+<div class="r"><button class="pri" id="go">Sambung</button><span id="st" class="mut">Belum tersambung</span></div>
+<details><summary>Cara pasang (aturan akses + feeder)</summary>
+<p class="mut">1) Panel → server → tab Aturan → tempel ini → Simpan. 2) Di Termux jalankan feeder dengan SECRET KEY.</p>
+<pre id="rules"></pre><button class="sm" id="cr">Salin aturan</button>
+<pre>python tred_feeder.py SECRET_KEY http://127.0.0.1:8080</pre></details></div>
+
+<div class="card" id="auth" hidden><h3>MASUK / DAFTAR</h3>
+<input id="em" type="email" placeholder="email" autocapitalize="off"><input id="pw" type="password" placeholder="password (min. 8 karakter)">
+<div class="r"><button class="pri" id="li">Masuk</button><button id="su">Daftar</button></div></div>
+
+<div id="app" hidden>
+<div class="card bal"><div><span class="mut">SALDO</span><b id="sal">-</b></div><div><span class="mut">TOTAL ASET</span><b id="eq">-</b></div><div><span class="mut">FEED</span><b id="fd" style="font-size:.95rem">-</b></div></div>
+<div class="grid"><div>
+<div class="card"><h3>PASAR</h3><div id="mk"></div></div>
+<div class="card"><h3 id="ct">GRAFIK</h3><canvas id="cv"></canvas></div></div>
+<div><div class="card"><h3>ORDER <span id="os" class="up"></span></h3>
+<div class="mut" id="op">-</div><input id="q" inputmode="numeric" placeholder="jumlah (bilangan bulat)" value="1">
+<div class="r" style="margin-bottom:8px"><button class="sm" data-q="1">1</button><button class="sm" data-q="10">10</button><button class="sm" data-q="100">100</button><button class="sm" id="mx">Maks beli</button><button class="sm" id="al">Jual semua</button></div>
+<div class="mut" id="es" style="margin-bottom:8px">Estimasi: -</div>
+<div class="r"><button class="b" id="by">BELI</button><button class="s" id="sl">JUAL</button></div></div>
+<div class="card"><h3>POSISI</h3><div id="ps"></div></div>
+<div class="card"><h3>RIWAYAT</h3><div id="tr"></div><button class="sm s" id="rs" style="margin-top:8px">Reset akun</button></div></div></div></div>
+<div id="toast" hidden></div></div>
+<script>
+var $=function(s){return document.querySelector(s)},rhf,uid,U=null,M={},sel='',subs=[],offAuth,pend,inited,lastTick=0,prev={};
+var RULES={"market":{"read":"public","write":"none"},"users/{uid}":{"read":"owner","write":"none"},"orders/{uid}":{"read":"owner","write":"owner","max":400},"orders/{uid}/*":{"read":"owner","write":"owner","type":"object"}};
+$('#rules').textContent=JSON.stringify(RULES,null,2);
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+// semua uang = bilangan bulat sen (1 Rp = 100). Tidak ada float di perhitungan saldo.
+function fmt(c){c=Math.round(c);var a=Math.abs(c),w=Math.floor(a/100),f=a%100;return(c<0?'-':'')+String(w).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+','+(f<10?'0':'')+f}
+function pr(s){var n=M.now&&M.now[s];return n?n.p:0}
+function st(t,bad){var e=$('#st');e.textContent=t;e.className=bad?'dn':'up'}
+var tt;function toast(t,bad){var e=$('#toast');e.textContent=t;e.className=bad?'e':'';e.hidden=false;clearTimeout(tt);tt=setTimeout(function(){e.hidden=true},3500)}
+function cp(t,b){var d=document.createElement('textarea');d.value=t;document.body.appendChild(d);d.select();try{document.execCommand('copy');toast('Disalin')}catch(e){toast('Salin manual',1)}d.remove()}
+function loadSdk(u){return new Promise(function(ok,no){var s=document.createElement('script');s.src=u+'/sdk.js?'+Date.now();s.onload=ok;s.onerror=function(){no(new Error('sdk.js tidak bisa dimuat dari URL itu'))};document.head.appendChild(s)})}
+function stop(){subs.forEach(function(f){f()});subs=[]}
+function connect(){var url=$('#url').value.trim().replace(/\/+$/,''),key=$('#key').value.trim();if(!url)return st('Isi URL server dulu',1);
+localStorage.setItem('tred_cfg',JSON.stringify({url:url,key:key}));st('Menyambung...');
+fetch(url+'/api/me',{headers:{'X-API-Key':key}}).then(function(r){return r.json().then(function(d){if(!r.ok)throw new Error(d.error||('HTTP '+r.status));return d})})
+.then(function(d){return loadSdk(url).then(function(){stop();if(offAuth)offAuth();rhf=RHF.init(url,key);st('Terhubung: '+d.name+' ('+d.role+')');offAuth=rhf.auth.onChange(onUser)})})
+.catch(function(e){st('Gagal: '+e.message+(/fetch/i.test(e.message)?' (cek URL, WiFi sama, atau halaman https vs server http)':''),1)})}
+function fatal(e){toast('Ditolak: '+e.message+' — pasang aturan akses dulu',1)}
+function onUser(u){stop();uid=u&&u.uid;U=null;M={};inited=false;
+$('#auth').hidden=!!uid;$('#app').hidden=!uid;$('#out').hidden=!uid;$('#who').textContent=uid?(u.email||uid):'';if(!uid)return;
+subs.push(rhf.ref('users/'+uid).on('value',function(v){U=v;
+if(v===null&&!inited){inited=true;rhf.ref('orders/'+uid).push({k:'init',t:Date.now()}).catch(function(e){toast(e.message,1)})}
+if(v&&v.last&&v.last.id===pend){pend=null;$('#os').textContent='';toast(v.last.m,!v.last.ok)}render()},null,fatal));
+subs.push(rhf.ref('market').on('value',function(v){M=v||{};lastTick=Date.now();render()},null,fatal))}
+function order(k,q){if(!/^\d{1,7}$/.test(String(q))||+q<1)return toast('Jumlah harus bilangan bulat >= 1',1);if(!sel&&k!=='reset')return toast('Pilih instrumen',1);
+rhf.ref('orders/'+uid).push({k:k,s:sel||'-',q:+q,t:Date.now()}).then(function(id){pend=id;$('#os').textContent='menunggu server...';
+setTimeout(function(){if(pend===id){pend=null;$('#os').textContent='';toast('Server tidak merespon. Feeder jalan?',1)}},8000)}).catch(function(e){toast(e.message,1)})}
+function render(){if(!uid)return;var now=M.now||{},ks=Object.keys(now).sort(),sal=U&&U.saldo||0,pos=U&&U.pos||{};if(!sel&&ks.length)sel=ks[0];
+var eq=sal,age=Date.now()-lastTick,live=age<6000&&ks.length;
+$('#sal').textContent='Rp '+fmt(sal);$('#fd').textContent=live?'LIVE':'MATI';$('#fd').className=live?'up':'dn';
+$('#mk').innerHTML=ks.map(function(s){var n=now[s],ch=n.o?(n.p-n.o)*10000/n.o:0,cl=ch>=0?'up':'dn',f=prev[s]===undefined||prev[s]===n.p?'':(n.p>prev[s]?'u':'d');prev[s]=n.p;
+return'<div class="row '+f+(s===sel?' on':'')+'" data-s="'+esc(s)+'"><span>'+esc(s)+'</span><b>'+fmt(n.p)+'</b><span class="'+cl+'">'+(ch>=0?'+':'')+(Math.round(ch)/100).toFixed(2)+'%</span></div>'}).join('')||'<div class="mut">Menunggu data dari feeder...</div>';
+var rows=Object.keys(pos).sort().map(function(s){var x=pos[s],v=x.q*pr(s),pl=v-x.c;eq+=v;return'<tr><td>'+esc(s)+'</td><td>'+x.q+'</td><td>'+fmt(Math.round(x.c/x.q))+'</td><td>'+fmt(v)+'</td><td class="'+(pl>=0?'up':'dn')+'">'+fmt(pl)+'</td></tr>'});
+$('#eq').textContent='Rp '+fmt(eq);
+$('#ps').innerHTML=rows.length?'<table><tr><th>Kode</th><th>Jml</th><th>Rata2</th><th>Nilai</th><th>P/L</th></tr>'+rows.join('')+'</table>':'<div class="mut">Belum ada posisi</div>';
+var t=U&&U.trades||{};var tk=Object.keys(t).sort().reverse().slice(0,12);
+$('#tr').innerHTML=tk.length?'<table><tr><th>Waktu</th><th>Order</th><th>Harga</th><th>P/L</th></tr>'+tk.map(function(k){var x=t[k];return'<tr><td>'+new Date(x.t).toLocaleTimeString('id-ID')+'</td><td class="'+(x.side=='buy'?'up':'dn')+'">'+(x.side=='buy'?'BELI ':'JUAL ')+esc(x.s)+' '+x.q+'</td><td>'+fmt(x.p)+'</td><td>'+(x.side=='sell'?fmt(x.pl||0):'')+'</td></tr>'}).join('')+'</table>':'<div class="mut">Belum ada transaksi</div>';
+$('#op').textContent=sel?(sel+' @ Rp '+fmt(pr(sel))):'-';$('#ct').textContent='GRAFIK '+sel;est();chart()}
+function est(){var q=$('#q').value;$('#es').textContent=/^\d{1,7}$/.test(q)&&sel?'Estimasi: Rp '+fmt(+q*pr(sel))+' (harga final = harga server saat diproses)':'Estimasi: -'}
+function chart(){var cv=$('#cv'),b=cv.getBoundingClientRect(),d=window.devicePixelRatio||1;if(!b.width)return;cv.width=b.width*d;cv.height=b.height*d;var g=cv.getContext('2d');g.scale(d,d);var W=b.width,H=b.height;
+var h=M.hist&&M.hist[sel],a=h?Object.keys(h).map(function(k){return h[k]}).sort(function(x,y){return x.t-y.t}):[],n=M.now&&M.now[sel];if(n&&(!a.length||a[a.length-1].t<n.t))a.push({t:n.t,p:n.p});
+g.font='11px monospace';g.fillStyle='#7385a0';if(a.length<2){g.fillText('mengumpulkan data...',8,18);return}
+var lo=Infinity,hi=-Infinity;a.forEach(function(x){lo=Math.min(lo,x.p);hi=Math.max(hi,x.p)});var sp=(hi-lo)||1,t0=a[0].t,sx=(a[a.length-1].t-t0)||1;
+g.strokeStyle=a[a.length-1].p>=a[0].p?'#22d3a0':'#ff4d6d';g.lineWidth=1.6;g.beginPath();
+a.forEach(function(x,i){var X=6+(x.t-t0)/sx*(W-12),Y=H-16-(x.p-lo)/sp*(H-32);i?g.lineTo(X,Y):g.moveTo(X,Y)});g.stroke();g.fillText(fmt(hi),6,11);g.fillText(fmt(lo),6,H-3)}
+$('#go').onclick=connect;$('#li').onclick=function(){rhf&&rhf.auth.login($('#em').value.trim(),$('#pw').value).catch(function(e){toast(e.message,1)})};
+$('#su').onclick=function(){rhf&&rhf.auth.signup($('#em').value.trim(),$('#pw').value).catch(function(e){toast(e.message,1)})};
+$('#out').onclick=function(){rhf.auth.logout()};$('#cr').onclick=function(){cp(JSON.stringify(RULES,null,2))};
+$('#mk').onclick=function(e){var r=e.target.closest('.row');if(r){sel=r.dataset.s;render()}};
+$('#q').oninput=est;document.querySelectorAll('[data-q]').forEach(function(b){b.onclick=function(){$('#q').value=b.dataset.q;est()}});
+$('#mx').onclick=function(){var p=pr(sel);if(p)$('#q').value=Math.floor((U&&U.saldo||0)/p);est()};
+$('#al').onclick=function(){var x=U&&U.pos&&U.pos[sel];$('#q').value=x?x.q:0;est()};
+$('#by').onclick=function(){order('buy',$('#q').value)};$('#sl').onclick=function(){order('sell',$('#q').value)};
+$('#rs').onclick=function(){if(confirm('Reset saldo dan hapus semua posisi & riwayat?'))order('reset',1)};
+setInterval(function(){if(uid)render()},2000);
+try{var c=JSON.parse(localStorage.getItem('tred_cfg')||'null');if(c){$('#url').value=c.url;$('#key').value=c.key||'';connect()}}catch(e){}
+</script></body></html>
